@@ -71,7 +71,8 @@ namespace QuantConnect
             Tuple.Create(InteractiveBrokers, 39),
             Tuple.Create(EUREX, 40),
             Tuple.Create(OSE, 41),
-            Tuple.Create(DYDX, 42)
+            Tuple.Create(DYDX, 42),
+            Tuple.Create(Brazil, 43)
         };
 
         static Market()
@@ -145,6 +146,11 @@ namespace QuantConnect
         /// NSE - National Stock Exchange
         /// </summary>
         public const string India = "india";
+
+        /// <summary>
+        /// B3 - Brasil Bolsa Balcao (Brazilian Stock Exchange)
+        /// </summary>
+        public const string Brazil = "brazil";
 
         /// <summary>
         /// Comex

@@ -24,6 +24,7 @@ using QuantConnect.Orders.Fees;
 using QuantConnect.Securities;
 using QuantConnect.Securities.Cfd;
 using QuantConnect.Securities.Crypto;
+using QuantConnect.Securities.Equity;
 using QuantConnect.Securities.Forex;
 using QuantConnect.Securities.Future;
 using QuantConnect.Securities.FutureOption;
@@ -443,5 +444,132 @@ namespace QuantConnect.Tests.Common.Orders.Fees
                 return new TestCaseData(symbol, x.ExpectedFee);
             }).ToArray();
         }
+
+        #region Brazil B3 Tests
+
+        private Equity CreateBrazilEquity(decimal price = 60m)
+        {
+            var symbol = Symbol.Create("VALE3", SecurityType.Equity, Market.Brazil);
+            var security = new Equity(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("BRL", 0, 1),
+                SymbolProperties.GetDefault("BRL"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+            return security;
+        }
+
+        private Future CreateBrazilFuture(decimal price = 130000m)
+        {
+            var symbol = Symbol.CreateFuture("WIN", Market.Brazil, SecurityIdentifier.DefaultDate);
+            var security = new Future(
+                symbol,
+                SecurityExchangeHours.AlwaysOpen(TimeZones.NewYork),
+                new Cash("BRL", 0, 1),
+                SymbolProperties.GetDefault("BRL"),
+                ErrorCurrencyConverter.Instance,
+                RegisteredSecurityDataTypesProvider.Null,
+                new SecurityCache()
+            );
+            security.SetMarketPrice(new Tick(DateTime.UtcNow, security.Symbol, price, price));
+            return security;
+        }
+
+        [Test]
+        public void BrazilEquityFeeInBRL()
+        {
+            var security = CreateBrazilEquity(60m);
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 100, DateTime.UtcNow))
+            );
+
+            // 100 shares * 60 BRL = 6000 BRL trade value * 0.07% = 4.20 BRL
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(4.20m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilEquitySellOrderFeeIsPositive()
+        {
+            var security = CreateBrazilEquity(60m);
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, -100, DateTime.UtcNow))
+            );
+
+            // Sell order (negative qty) should still produce positive fee
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(4.20m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilEquityLargeOrderFee()
+        {
+            var security = CreateBrazilEquity(50m);
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 10000, DateTime.UtcNow))
+            );
+
+            // 10000 shares * 50 BRL = 500,000 BRL trade value * 0.07% = 350.00 BRL
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(350.00m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilEquitySingleShareFee()
+        {
+            var security = CreateBrazilEquity(25m);
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 1, DateTime.UtcNow))
+            );
+
+            // 1 share * 25 BRL = 25 BRL trade value * 0.07% = 0.0175 BRL (no minimum)
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(0.0175m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilFutureFeeInBRL()
+        {
+            var security = CreateBrazilFuture();
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 5, DateTime.UtcNow))
+            );
+
+            // 5 contracts * BRL 1.50 = 7.50 BRL
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(7.50m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilFutureSingleContractFee()
+        {
+            var security = CreateBrazilFuture();
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, 1, DateTime.UtcNow))
+            );
+
+            // 1 contract * BRL 1.50 = 1.50 BRL
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(1.50m, fee.Value.Amount);
+        }
+
+        [Test]
+        public void BrazilFutureSellOrderFeeIsPositive()
+        {
+            var security = CreateBrazilFuture();
+            var fee = _feeModel.GetOrderFee(
+                new OrderFeeParameters(security, new MarketOrder(security.Symbol, -10, DateTime.UtcNow))
+            );
+
+            // Sell order (negative qty) should still produce positive fee
+            Assert.AreEqual(Currencies.BRL, fee.Value.Currency);
+            Assert.AreEqual(15.00m, fee.Value.Amount);
+        }
+
+        #endregion
     }
 }

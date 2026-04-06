@@ -43,7 +43,8 @@ namespace QuantConnect.Orders.Fees
             {
                 { Market.USA, UnitedStatesFutureFees },
                 { Market.HKFE, HongKongFutureFees },
-                { Market.EUREX, EUREXFutureFees }
+                { Market.EUREX, EUREXFutureFees },
+                { Market.Brazil, BrazilFutureFees }
             };
 
         /// <summary>
@@ -145,6 +146,12 @@ namespace QuantConnect.Orders.Fees
                         case Market.India:
                             equityFee = new EquityFee(Currencies.INR, feePerShare: 0.01m, minimumFee: 6, maximumFeeRate: 20);
                             break;
+                        case Market.Brazil:
+                            // IB Brazil equities: 0.07% of trade value (base tier <= 300M BRL/month), no minimum
+                            var brazilTradeValue = Math.Abs(order.GetValue(security));
+                            feeCurrency = Currencies.BRL;
+                            feeResult = 0.0007m * brazilTradeValue;
+                            return new OrderFee(new CashAmount(feeResult, feeCurrency));
                         default:
                             throw new KeyNotFoundException(Messages.InteractiveBrokersFeeModel.UnexpectedEquityMarket(market));
                     }
@@ -407,6 +414,15 @@ namespace QuantConnect.Orders.Fees
 
             // Add exchange fees + IBKR regulatory fee (0.02)
             return new CashAmount(ibFeePerContract + exchangeFeePerContract + 0.02m, Currencies.EUR);
+        }
+
+        /// <summary>
+        /// Reference at https://www.interactivebrokers.com/en/pricing/commissions-futures.php
+        /// IB Brazil futures: BRL 1.50/contract (base tier, &lt;= 1,000 contracts/month)
+        /// </summary>
+        private static CashAmount BrazilFutureFees(Security security)
+        {
+            return new CashAmount(1.50m, Currencies.BRL);
         }
 
         /// <summary>

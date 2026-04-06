@@ -47,6 +47,11 @@ namespace QuantConnect
         public const string INR = "INR";
 
         /// <summary>
+        /// BRL (Brazilian real) currency string
+        /// </summary>
+        public const string BRL = "BRL";
+
+        /// <summary>
         /// IDR (Indonesian rupiah) currency string
         /// </summary>
         public const string IDR = "IDR";
