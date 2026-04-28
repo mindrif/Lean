@@ -40,6 +40,13 @@
 # Include docker launch scripts for Mac/Linux
 !run_docker.sh
 !research/run_docker_notebook.sh
+# Kairos fork: keep Claude Code statusline script tracked
+!.claude/scripts/statusline.sh
+
+# Kairos fork: never commit local secrets / API tokens
+.env
+.env.*
+!.env.example
 
 # QC Config Files:
 # config.json

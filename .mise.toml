@@ -1,0 +1,24 @@
+[settings]
+experimental = true
+
+[hooks]
+enter = "mise install -q"
+
+[env]
+# Load .env for credentials if needed
+_.file = ".env"
+# PythonNet needs to find the Python 3.11 shared library (Lean requires 3.11, not 3.12+)
+PYTHONNET_PYDLL = "{{env.HOME}}/.local/share/mise/installs/python/3.11/lib/libpython3.11.so"
+
+[tools]
+# Core runtime — LEAN engine targets net10.0
+dotnet = "10.0.201"
+# PythonNet in Lean requires Python 3.11 (3.12+ removed PyUnicode_AsUnicode)
+python = "3.11"
+
+# Development utilities
+just = "latest"
+
+# Claude Code usage tracking
+"npm:ccusage" = "latest"
+node = "latest"
