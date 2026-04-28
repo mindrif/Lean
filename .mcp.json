@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "sh",
+      "args": ["-c", "npx -y @upstash/context7-mcp --api-key \"$CTX7_API_KEY\""]
+    },
+    "firecrawl-mcp": {
+      "command": "sh",
+      "args": ["-c", "FIRECRAWL_API_KEY=$FIRECRAWL_API_KEY npx -y firecrawl-mcp"]
+    },
+    "qc-mcp": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "-c",
+        "export $(grep -v '^#' \"$PWD/.env\" | xargs) && docker run -i --rm --platform linux/amd64 -e QUANTCONNECT_USER_ID -e QUANTCONNECT_API_TOKEN -e AGENT_NAME=claude-code quantconnect/mcp-server"
+      ]
+    }
+  }
+}
